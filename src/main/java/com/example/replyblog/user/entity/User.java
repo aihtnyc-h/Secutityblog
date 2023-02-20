@@ -8,10 +8,8 @@ import javax.persistence.*;
 
 @Getter
 @NoArgsConstructor
-@Entity(name = "users")     // SpringBoot 2.7부터 H2가 ver2로 업데이트되면서 USER가 예약어로 등록되었습니다. @Entity를 @Entity(name = "users")로 변경하여 테이블 이름을 USERS로 설정
+@Entity(name = "users")     // SpringBoot 2.7부터 H2가 ver2로 업데이트되면서 USER가 예약어로 등록되어있음. @Entity를 @Entity(name = "users")로 변경하여 테이블 이름을 USERS로 설정
 public class User {
-
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

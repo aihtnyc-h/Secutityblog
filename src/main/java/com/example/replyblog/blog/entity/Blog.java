@@ -2,7 +2,7 @@ package com.example.replyblog.blog.entity;
 
 import com.example.replyblog.blog.dto.BlogRequestDto;
 import com.example.replyblog.replay.entity.Reply;
-import com.example.replyblog.entity.Timestamped;
+import com.example.replyblog.common.Timestamped;
 import com.example.replyblog.user.entity.User;
 import lombok.Builder;
 import lombok.Getter;
@@ -27,10 +27,10 @@ public class Blog extends Timestamped {
 
     // 관계형성
     @ManyToOne
-    @JoinColumn(name = "USER_ID", nullable = false)
+    @JoinColumn(name = "User_ID", nullable = false)
     private User user;
 
-    @OneToMany(mappedBy = "Blog", cascade = CascadeType.REMOVE)
+    @OneToMany(mappedBy = "blog", cascade = CascadeType.REMOVE)
     @OrderBy(value = "createdAt DESC")
     private List<Reply> comments = new ArrayList<>();
 

@@ -21,19 +21,19 @@ public class BlogController {
     private final BlogService blogService;  // 의존성 주입!
 
     // 메인 페이지
-    @GetMapping("/")
-    public ModelAndView home() {
-        return new ModelAndView("index");
-    }
+//    @GetMapping("/")
+//    public ModelAndView home() {
+//        return new ModelAndView("index");
+//    }
 
     // 전체조회
-    @GetMapping("/")
+    @GetMapping("/api/blogs")
     public ResponseEntity<List<AllResponseDto>> getBlogs() {
         return blogService.getBlogs();
     }
-
+//    public ResponseEntity<BlogResponseDto>getBlogs() {
+//        return blogService.getBlogs(); }
     //게시글 1개 조회하기 서버
-
     @GetMapping("/api/blog/{id}")
     public ResponseEntity<BlogResponseDto> getBlog(@PathVariable Long id) {
         return blogService.getBlog(id);
@@ -45,8 +45,8 @@ public class BlogController {
 
     // 게시글 생성하기 서버
     @PostMapping("/api/blog")
-    public  ResponseEntity<BlogResponseDto> createBlog(@RequestBody BlogRequestDto requestDto, HttpServletRequest request) {
-        return blogService.createBlog(requestDto, request);
+    public  ResponseEntity<BlogResponseDto> createBlog(@RequestBody BlogRequestDto blogRequestDto, HttpServletRequest request) {
+        return blogService.createBlog(blogRequestDto, request);
     }
     //    public List<BlogResponseDto> createBlog(@RequestBody BlogRequestDto requestDto, HttpServletRequest request) {
 //        return blogService.createBlog(requestDto, request);        //변수명사용하기 + 필드명 requestDto.getContents() -> 유저네임이 제목아름으로 들어갈 수 있기 때문에 대부분 통으로 보내준다.  // 카멜 케이스 단어랑 단어를 이어줄때, 뒤에오는 글자는 대문자       //왜 빨간줄이 뜨는거니..?
@@ -63,8 +63,8 @@ public class BlogController {
 
     //게시글 변경하기 서버
     @PutMapping("/api/blog/{id}")
-    public ResponseEntity<BlogResponseDto>  updateBlog(@PathVariable Long id, @RequestBody BlogRequestDto blogrequestDto, HttpServletRequest request){
-        return blogService.updateBlog(id, blogrequestDto, request);
+    public ResponseEntity<?> updateBlog(@PathVariable Long id, @RequestBody BlogRequestDto blogRequestDto, HttpServletRequest request) {
+        return blogService.updateBlog(id, blogRequestDto, request);
     }
 //    public List<BlogResponseDto> updateBlog(@RequestBody BlogRequestDto requestDto, HttpServletRequest request) {
 //        return blogService.updateBlog(requestDto, request);

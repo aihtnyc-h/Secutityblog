@@ -1,4 +1,4 @@
-package com.example.replyblog.entity;
+package com.example.replyblog.common;
 
 import lombok.Getter;
 import org.springframework.data.annotation.CreatedDate;

@@ -10,6 +10,7 @@ import com.example.replyblog.replay.repository.ReplyRepository;
 import com.example.replyblog.user.entity.User;
 import com.example.replyblog.user.entity.UserRoleEnum;
 import com.example.replyblog.user.repository.UserRepository;
+import com.example.replyblog.util.CustomException;
 import com.example.replyblog.util.ErrorResponse;
 import io.jsonwebtoken.Claims;
 import lombok.RequiredArgsConstructor;
@@ -20,6 +21,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Optional;
+
+import static com.example.replyblog.util.ErrorCode.*;
 
 @Service
 @RequiredArgsConstructor
@@ -40,35 +43,35 @@ public class ReplyService {
         // 2) 토큰을 검사하여, 유효한 토큰일 경우에만 댓글 작성 가능
         if (token != null) {
             if (jwtUtil.validateToken(token)) {
-                // 토큰에서 사용자 정보 가져오기
-                claims = jwtUtil.getUserInfoFromToken(token);
+                claims = jwtUtil.getUserInfoFromToken(token); // 토큰에서 사용자 정보 가져오기
             } else {
-                throw new IllegalArgumentException("Token Error");
+                return new ResponseEntity<ReplyResponseDto>(INVALID_TOKEN.getHttpStatus());
             }
-            // 3) id 와 user를 사용하여 blogRepoDB 조회 및 유무판단.
+            // 3) id 와 user를 사용하여 blogRepoDB 조회 및 유무
             Optional<Blog> blog = blogRepository.findById(id);
             if (blog.isEmpty()) {
-                throw new  IllegalArgumentException("사용자가 존재하지 않습니다.");
+                return new ResponseEntity<ReplyResponseDto>(NOT_FOUND_BLOG.getHttpStatus());
             }
 
             // 4) 토큰에서 가져온 사용자 정보를 사용하여 DB 조회 -> user 엔티티 get
             Optional<User> user = userRepository.findByUsername(claims.getSubject());
             if (user.isEmpty()) {
-                throw new  IllegalArgumentException("사용자가 존재하지 않습니다.");
+                return new ResponseEntity<ReplyResponseDto>(NOT_FOUND_USER.getHttpStatus());
             }
 
             // 5) 요청받은 DTO 로 DB에 저장할 객체 만들기
-            Reply reply = ReplyRepository.save(Reply.builder()
+            Reply reply = replyRepository.save(Reply.builder()
                     .replyrequestDto(replyRequestDto)
                     .user(user.get())
                     .blog(blog.get())
-                    .build());
+                    .build()
+            );
 
             // 6) ResponseEntity에 Body 부분에 만든 객체 전달.
             return ResponseEntity.ok()
                     .body(new ReplyResponseDto(reply));
         } else {
-            throw new  IllegalArgumentException("사용자가 존재하지 않습니다.");
+            return new ResponseEntity<ReplyResponseDto>(NOT_FOUND_TOKEN.getHttpStatus());
         }
     }
 
@@ -86,6 +89,11 @@ public class ReplyService {
                 claims = jwtUtil.getUserInfoFromToken(token);
             } else {
                 throw new IllegalArgumentException("Token Error");
+            }
+
+            Optional<User> user = userRepository.findByUsername(claims.getSubject());
+            if (user.isEmpty()) {
+                throw new CustomException(NOT_FOUND_USER);
             }
             // 3) Admin 권한이 있는 친구는 전부 수정, 아닌경우 일부수정.
             UserRoleEnum userRoleEnum = user.get().getRole();
