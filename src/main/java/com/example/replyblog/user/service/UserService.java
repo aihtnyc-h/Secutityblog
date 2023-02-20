@@ -32,32 +32,32 @@ public class UserService {
         // username 규칙!
         String username = signupRequestDto.getUsername();
         if (username.length() < 4 || username.length() > 10) {
-            throw new CustomException(NOT_CONGITION_USERNAME);
+            return new ResponseEntity(NOT_CONGITION_USERNAME.getHttpStatus());
         }
         if (!username.matches("^[0-9|a-z]*$")) {
-            throw new CustomException(NOT_CONGITION_USERNAME);
+            return new ResponseEntity(NOT_CONGITION_USERNAME.getHttpStatus());
         }
 
 
         String password = signupRequestDto.getPassword();
         System.out.println(password);
         if (password.length() < 8 || password.length() > 15) {
-            throw new CustomException(NOT_CONGITION_PASSWORD);
+            return new ResponseEntity(NOT_CONGITION_PASSWORD.getHttpStatus());
         }
         if (!password.matches("^[0-9|a-z|A-Z]*$")) {
-            throw new CustomException(NOT_CONGITION_PASSWORD);
+            return new ResponseEntity(NOT_CONGITION_PASSWORD.getHttpStatus());
         }
         // 회원 중복 확인
         Optional<User> found = userRepository.findByUsername(username);
         if (found.isPresent()) {
-            throw new CustomException(DUPLICATE_USER);
+            return new ResponseEntity(DUPLICATE_USER.getHttpStatus());
         }
 
         //사용자 ROLE 확인
         UserRoleEnum role = UserRoleEnum.USER;
         if (signupRequestDto.isAdmin()) {
             if (!signupRequestDto.getAdminToken().equals(ADMIN_TOKEN)) {
-                throw new CustomException(INVALID_ADMIN_TOKEN);
+                return new ResponseEntity(INVALID_ADMIN_TOKEN.getHttpStatus());
             }
             role = UserRoleEnum.ADMIN;
         }
@@ -167,16 +167,17 @@ public class UserService {
         String username = loginRequestDto.getUsername();
         String password = loginRequestDto.getPassword();
 
-        User user = userRepository.findByUsername(username).orElseThrow(
-                () -> new IllegalArgumentException("등록된 사용자가 없습니다.")
-        );
-
-
-        if(!user.getPassword().equals(password)){
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다");
+        Optional<User> user = userRepository.findByUsername(username);
+        if (user.isEmpty()) {
+            return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
         }
 
-        reponse.addHeader(JwtUtil.AUTHORIZATION_HEADER, jwtUtil.createToken(user.getUsername(), user.getRole()));
+        // 비밀번호 일치 확인
+        if(!user.get().getPassword().equals(password)){
+            return new ResponseEntity(NOT_CONGITION_PASSWORD.getHttpStatus());
+        }
+
+        reponse.addHeader(JwtUtil.AUTHORIZATION_HEADER, jwtUtil.createToken(user.get().getUsername(), user.get().getRole()));
 
         return ResponseEntity.ok()
 

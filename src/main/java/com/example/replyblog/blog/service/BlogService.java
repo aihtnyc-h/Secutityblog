@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.servlet.http.HttpServletRequest;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static com.example.replyblog.util.ErrorCode.*;
 
@@ -63,7 +64,7 @@ public class BlogService {
     public ResponseEntity<BlogResponseDto> getBlog(long id) {
         // 1) id를 사용하여 DB조회 및 유무
         Blog blog = blogRepository.findById(id).orElseThrow(
-                () -> new IllegalArgumentException("아이디가 존재하지 않습니다.") //DB에 존재하지 않으면
+                () -> new CustomException(NOT_FOUND_TOKEN) //DB에 존재하지 않으면
         );
         // 2) 가져온 blog에 comments을 commentList에 저장하기
         List<ReplyResponseDto> commentList = new ArrayList<>();
@@ -124,27 +125,29 @@ public class BlogService {
             if (jwtUtil.validateToken(token)) {
                 claims = jwtUtil.getUserInfoFromToken(token); // 토큰에서 사용자 정보 가져오기
             } else {
-                throw new CustomException(INVALID_TOKEN);
+                return new ResponseEntity(INVALID_TOKEN.getHttpStatus());
             }
 
             // 2-2) 토큰에서 가져온 사용자 정보를 사용하여 DB 조회 및 유무판단.
-            User user = userRepository.findByUsername(claims.getSubject()).orElseThrow(
-                    () -> new CustomException(NOT_FOUND_USER)
-            );
+            Optional<User> user = userRepository.findByUsername(claims.getSubject());
+            if (user.isEmpty()) {
+                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
+            }
 
-            // 3) 요청받은 DTO 로 DB에 저장할 객체 만들기
-            Blog blog = blogRepository.save(Blog.builder()
-                    .blogRequestDto(blogrequestDto)
-                    .user(user)
-                    .build());
+                // 3) 요청받은 DTO 로 DB에 저장할 객체 만들기
+                Blog blog = blogRepository.save(Blog.builder()
+                        .blogRequestDto(blogrequestDto)
+                        .user(user.get())
+                        .build());
 
-            // 4) ResponseEntity에 Body 부분에 만든 객체 전달.
-            return ResponseEntity.ok()
-                    .body(new BlogResponseDto(blog));
-        } else { // 토큰이 없는 경우.
-            throw new CustomException(NOT_FOUND_TOKEN);
+                // 4) ResponseEntity에 Body 부분에 만든 객체 전달.
+                return ResponseEntity.ok()
+                        .body(new BlogResponseDto(blog));
+            } else { // 토큰이 없는 경우.
+            return new ResponseEntity(INVALID_TOKEN.getHttpStatus());
+            }
         }
-    }
+
 //    @Transactional
 //    public ResponseEntity<?> createBlog(Long id, BlogRequestDto blogrequestDto, HttpServletRequest request) {
 //        // 1) Request에서 Token 가져오기
@@ -207,7 +210,7 @@ public class BlogService {
 //            Blog blog = blogRepository.saveAndFlush(Blog.builder()
 //                    .blogRequestDto(blogrequestDto)
 //                    .user(user)
-//                    .build());
+//                  .build());
 //            // 5) 요청받은 DTO를 DB에 저장할 객체 만들기
 //            return ResponseEntity.ok().body(new BlogResponseDto(blog));
 //        } else {
@@ -272,27 +275,29 @@ public class BlogService {
                 // 토큰에서 사용자 정보 가져오기
                 claims = jwtUtil.getUserInfoFromToken(token);
             } else {
-                throw new IllegalArgumentException("Token Error");
+                return new ResponseEntity(INVALID_TOKEN.getHttpStatus());
             }
             // 3) 토큰에서 가져온 사용자 정보를 사용하여 DB 조회
             // 회원 토큰 확인
-            User user = userRepository.findByUsername(claims.getSubject()).orElseThrow(
-                    () -> new IllegalArgumentException("사용자가 존재하지 않습니다.")
-            );
-            // 4) id와 user를 사용하여 DB조회
-            Blog blog = blogRepository.findById(id).orElseThrow(
-                    () -> new IllegalArgumentException("존재하지 않는 사용자입니다.")
-            );
-            if (blog.getUser().getUsername().equals(user.getUsername()) || user.getRole() == UserRoleEnum.ADMIN) {
-                blog.update(blogrequestDto, user);
-
-                return ResponseEntity.ok(new BlogDto.blogrequestDto(blog, blog.getUser().getUsername()));
-            } else {
-                return ErrorResponse.toResponseEntity(new CustomException(ErrorCode.NO_AUTHORITY).getErrorCode());
+            Optional<User> user = userRepository.findByUsername(claims.getSubject());
+            if (user.isEmpty()) {
+                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
             }
-
-        } else {
-            return ErrorResponse.toResponseEntity(new CustomException(INVALID_TOKEN).getErrorCode());
+            // 4) id와 user를 사용하여 DB조회
+            Optional<Blog> blog = blogRepository.findByIdAndUserId(id, user.get());
+            if (blog.isEmpty()) {
+                return new ResponseEntity(AUTHORIZATION.getHttpStatus());
+            }
+            //if (blog.getUser().getUsername().equals(user.getUsername()) || user.getRole() == UserRoleEnum.ADMIN) {
+            blog.get().update(blogrequestDto, user.get());
+            List<ReplyResponseDto> commentList = new ArrayList<>();
+            for (Reply reply : blog.get().getComments()) {
+                commentList.add(new ReplyResponseDto(reply));
+            }
+            return ResponseEntity.ok()
+                    .body(new BlogResponseDto(blog.get(), commentList));
+        } else { // 토큰이 존재하지 않을 경우.
+            return new ResponseEntity(INVALID_TOKEN.getHttpStatus());
         }
     }
 //            Optional<Blog> blog = blogRepository.findByIdAndUserId(id, user.get());
@@ -379,17 +384,18 @@ public class BlogService {
                 // 토큰에서 사용자 정보 가져오기
                 claims = jwtUtil.getUserInfoFromToken(token);
             } else {
-                throw new IllegalArgumentException("Token Error");
-            }
+                return new ResponseEntity(INVALID_TOKEN.getHttpStatus());            }
             // 3) 토큰에서 가져온 사용자 정보를 사용하여 DB 조회
             // 회원 토큰 확인
-            User user = userRepository.findByUsername(claims.getSubject()).orElseThrow(
-                    () -> new IllegalArgumentException("사용자가 존재하지 않습니다.")
-            );
+            Optional<User> user = userRepository.findByUsername(claims.getSubject());
+            if (user.isEmpty()) {
+                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
+            }
             // 4) id와 user를 사용하여 DB조회
-            Blog blog = blogRepository.findByIdAndUserId(id, user).orElseThrow(
-                    () -> new IllegalArgumentException("존재하지 않는 사용자입니다.")
-            );
+            Optional<Blog> blog = blogRepository.findByIdAndUserId(id, user.get());
+            if (blog.isEmpty()) {
+                return new ResponseEntity(AUTHORIZATION.getHttpStatus());
+            }
 
             // 5) id를 통해서 DB 삭제.
             blogRepository.deleteById(id);

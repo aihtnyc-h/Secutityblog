@@ -45,18 +45,19 @@ public class ReplyService {
             if (jwtUtil.validateToken(token)) {
                 claims = jwtUtil.getUserInfoFromToken(token); // 토큰에서 사용자 정보 가져오기
             } else {
-                return new ResponseEntity<ReplyResponseDto>(INVALID_TOKEN.getHttpStatus());
+                return new ResponseEntity(INVALID_TOKEN.getHttpStatus());
             }
             // 3) id 와 user를 사용하여 blogRepoDB 조회 및 유무
             Optional<Blog> blog = blogRepository.findById(id);
             if (blog.isEmpty()) {
-                return new ResponseEntity<ReplyResponseDto>(NOT_FOUND_BLOG.getHttpStatus());
+                return new ResponseEntity(NOT_FOUND_BLOG.getHttpStatus());
             }
 
             // 4) 토큰에서 가져온 사용자 정보를 사용하여 DB 조회 -> user 엔티티 get
             Optional<User> user = userRepository.findByUsername(claims.getSubject());
             if (user.isEmpty()) {
-                return new ResponseEntity<ReplyResponseDto>(NOT_FOUND_USER.getHttpStatus());
+                //return new ResponseEntity<ReplyResponseDto>(NOT_FOUND_USER.getHttpStatus());
+                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
             }
 
             // 5) 요청받은 DTO 로 DB에 저장할 객체 만들기
@@ -71,7 +72,7 @@ public class ReplyService {
             return ResponseEntity.ok()
                     .body(new ReplyResponseDto(reply));
         } else {
-            return new ResponseEntity<ReplyResponseDto>(NOT_FOUND_TOKEN.getHttpStatus());
+            return new ResponseEntity(NOT_FOUND_TOKEN.getHttpStatus());
         }
     }
 
@@ -88,12 +89,13 @@ public class ReplyService {
                 // 토큰에서 사용자 정보 가져오기
                 claims = jwtUtil.getUserInfoFromToken(token);
             } else {
-                throw new IllegalArgumentException("Token Error");
+                return new ResponseEntity(INVALID_TOKEN.getHttpStatus());
             }
 
             Optional<User> user = userRepository.findByUsername(claims.getSubject());
             if (user.isEmpty()) {
-                throw new CustomException(NOT_FOUND_USER);
+                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
+
             }
             // 3) Admin 권한이 있는 친구는 전부 수정, 아닌경우 일부수정.
             UserRoleEnum userRoleEnum = user.get().getRole();
@@ -102,13 +104,13 @@ public class ReplyService {
             if (userRoleEnum == UserRoleEnum.ADMIN) {
                 reply = replyRepository.findById(id);
                 if (reply.isEmpty()) { // 일치하는 댓글이 없다면
-                    throw new  IllegalArgumentException("댓글이 존재하지 않습니다.");
+                    return new ResponseEntity(NOT_FOUND_COMMENT.getHttpStatus());
                 }
 
             } else { // 3-2) User 권한인 경우.
                 reply = replyRepository.findByIdAndUser(id, user.get());
                 if (reply.isEmpty()) { // 일치하는 댓글이 없다면
-                    throw new  IllegalArgumentException("댓글이 존재하지 않습니다.");
+                    return new ResponseEntity(NOT_FOUND_COMMENT.getHttpStatus());
                 }
             }
             // 4) Comment Update
@@ -118,7 +120,7 @@ public class ReplyService {
             return ResponseEntity.ok()
                     .body(new ReplyResponseDto(reply.get()));
         } else {
-            throw new  IllegalArgumentException("댓글이 존재하지 않습니다.");
+            return new ResponseEntity(NOT_FOUND_TOKEN.getHttpStatus());
         }
 
     }
@@ -137,13 +139,13 @@ public class ReplyService {
                 claims = jwtUtil.getUserInfoFromToken(token); // 토큰에서 사용자 정보 가져오기
 
             } else {
-                throw new  IllegalArgumentException("댓글이 존재하지 않습니다.");
+                return new ResponseEntity(INVALID_TOKEN.getHttpStatus());
             }
 
             //  2-2) 토큰에서 가져온 사용자 정보를 사용하여 DB 조회 및 유무 판단.
             Optional<User> user = userRepository.findByUsername(claims.getSubject());
             if (user.isEmpty()) {
-                throw new  IllegalArgumentException("댓글이 존재하지 않습니다.");
+                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
             }
             // 3) Admin 권한이 있는 친구는 전부 수정, 아닌경우 일부수정.
             UserRoleEnum userRoleEnum = user.get().getRole();
@@ -153,13 +155,13 @@ public class ReplyService {
             if (userRoleEnum == UserRoleEnum.ADMIN) {
                 reply = replyRepository.findById(id);
                 if (reply.isEmpty()) { // 일치하는 댓글이 없다면
-                    throw new  IllegalArgumentException("댓글이 존재하지 않습니다.");
+                    return new ResponseEntity(NOT_FOUND_COMMENT.getHttpStatus());
                 }
 
             } else {    // 3-2) User 권한인 경우.
                 reply = replyRepository.findByIdAndUser(id, user.get());
                 if (reply.isEmpty()) { // 일치하는 댓글이 없다면
-                    throw new  IllegalArgumentException("댓글이 존재하지 않습니다.");
+                    return new ResponseEntity(NOT_FOUND_COMMENT.getHttpStatus());
                 }
             }
 
@@ -174,7 +176,7 @@ public class ReplyService {
                             .build()
                     );
         } else { // 토큰이 없는 경우
-            throw new  IllegalArgumentException("댓글이 존재하지 않습니다.");
+            return new ResponseEntity(NOT_FOUND_TOKEN.getHttpStatus());
         }
     }
 
