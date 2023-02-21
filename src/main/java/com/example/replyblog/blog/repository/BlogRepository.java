@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 @Repository
 public interface BlogRepository extends JpaRepository<Blog, Long> {
-    List<Blog> findAllByOrderByCreatedAtAsc();
-    Optional<Blog> findByIdAndUserId(Long id, User user);
+    List<Blog> findAllByOrderByModifiedAtDesc();
+    Optional<Blog> findByIdAndUser(Long id, User user);
 
 }

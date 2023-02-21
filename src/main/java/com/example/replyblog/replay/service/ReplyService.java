@@ -59,7 +59,6 @@ public class ReplyService {
                 //return new ResponseEntity<ReplyResponseDto>(NOT_FOUND_USER.getHttpStatus());
                 return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
             }
-
             // 5) 요청받은 DTO 로 DB에 저장할 객체 만들기
             Reply reply = replyRepository.save(Reply.builder()
                     .replyrequestDto(replyRequestDto)
@@ -78,7 +77,7 @@ public class ReplyService {
 
     // 2. 댓글 수정
     @Transactional
-    public ResponseEntity<ReplyResponseDto> updateComment(Long id, ReplyRequestDto replyRequestDto, HttpServletRequest request) {
+    public ResponseEntity<ReplyResponseDto> updateComment(Long id, ReplyRequestDto replyRequestDto, HttpServletRequest request) { //  HttpServletRequest request 지우기
         // 1) Request에서 Token 가져오기
         String token = jwtUtil.resolveToken(request);
         Claims claims;
@@ -151,14 +150,14 @@ public class ReplyService {
             UserRoleEnum userRoleEnum = user.get().getRole();
             Optional<Reply> reply;
 
-            // 3-1) Admin 권환인 경우.
+            // Admin 권환인 경우.
             if (userRoleEnum == UserRoleEnum.ADMIN) {
                 reply = replyRepository.findById(id);
                 if (reply.isEmpty()) { // 일치하는 댓글이 없다면
                     return new ResponseEntity(NOT_FOUND_COMMENT.getHttpStatus());
                 }
 
-            } else {    // 3-2) User 권한인 경우.
+            } else {    // User 권한인 경우.
                 reply = replyRepository.findByIdAndUser(id, user.get());
                 if (reply.isEmpty()) { // 일치하는 댓글이 없다면
                     return new ResponseEntity(NOT_FOUND_COMMENT.getHttpStatus());

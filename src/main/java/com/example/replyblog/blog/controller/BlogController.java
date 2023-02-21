@@ -5,6 +5,7 @@ import com.example.replyblog.blog.dto.BlogRequestDto;
 import com.example.replyblog.blog.dto.BlogResponseDto;
 import com.example.replyblog.blog.service.BlogService;
 import com.example.replyblog.dto.AllResponseDto;
+import com.example.replyblog.util.ErrorResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -64,7 +65,7 @@ public class BlogController {
 
     //게시글 변경하기 서버
     @PutMapping("/api/blog/{id}")
-    public ResponseEntity<?> updateBlog(@PathVariable Long id, @RequestBody BlogRequestDto blogRequestDto, HttpServletRequest request) {
+    public ResponseEntity<BlogResponseDto> updateBlog(@PathVariable Long id, @RequestBody BlogRequestDto blogRequestDto, HttpServletRequest request) {
         return blogService.updateBlog(id, blogRequestDto, request);
     }
 //    public List<BlogResponseDto> updateBlog(@RequestBody BlogRequestDto requestDto, HttpServletRequest request) {
@@ -79,7 +80,7 @@ public class BlogController {
 
     //게시글 삭제하기 서버
     @DeleteMapping("/api/blog/{id}")
-    public ResponseEntity<MessageDto> deleteBlog(@PathVariable long id, HttpServletRequest request){
+    public ResponseEntity<ErrorResponse> deleteBlog(@PathVariable long id, HttpServletRequest request){
         return blogService.deleteBlog(id, request);
     }
 //    @DeleteMapping("/api/blog/{id}")

@@ -8,7 +8,7 @@ public class MessageDto {
     private String msg;
     private int statusCode;
     @Builder
-    public MessageDto(String msg, int statusCode) {
+    public MessageDto(String msg) {
         this.msg = msg;
         this.statusCode = statusCode;
     }

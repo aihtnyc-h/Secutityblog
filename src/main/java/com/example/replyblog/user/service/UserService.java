@@ -13,6 +13,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.BindingResult;
 
 import javax.servlet.http.HttpServletResponse;
 import java.util.Optional;
@@ -28,55 +29,70 @@ public class UserService {
     private final JwtUtil jwtUtil;
 
     @Transactional
-    public ResponseEntity<MessageDto> signup(SignupRequestDto signupRequestDto) {
+    public ResponseEntity<?> signup(SignupRequestDto signupRequestDto, BindingResult bindingResult) {
         // username 규칙!
         String username = signupRequestDto.getUsername();
-        if (username.length() < 4 || username.length() > 10) {
-            return new ResponseEntity(NOT_CONGITION_USERNAME.getHttpStatus());
-        }
-        if (!username.matches("^[0-9|a-z]*$")) {
-            return new ResponseEntity(NOT_CONGITION_USERNAME.getHttpStatus());
-        }
-
-
+//        if (username.length() < 4 || username.length() > 10) {
+//            return new ResponseEntity(NOT_CONGITION_USERNAME.getHttpStatus());
+//        }
+//        if (!username.matches("^[0-9|a-z]*$")) {
+//            return new ResponseEntity(NOT_CONGITION_USERNAME.getHttpStatus());
+//        }
         String password = signupRequestDto.getPassword();
-        System.out.println(password);
-        if (password.length() < 8 || password.length() > 15) {
-            return new ResponseEntity(NOT_CONGITION_PASSWORD.getHttpStatus());
+//        System.out.println(password);
+//        if (password.length() < 8 || password.length() > 15) {
+//            return new ResponseEntity(NOT_CONGITION_PASSWORD.getHttpStatus());
+//        }
+//        if (!password.matches("^[0-9|a-z|A-Z]*$")) {
+//            return new ResponseEntity(NOT_CONGITION_PASSWORD.getHttpStatus());
+//        }
+        if (bindingResult.hasErrors()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+//        if (bindingResult.hasErrors()){
+//            return ResponseEntity.badRequest()  // status : bad request
+//                    .body(MessageDto.builder()  // body : SuccessResponseDto (statusCode, msg)
+//                            .statusCode(HttpStatus.BAD_REQUEST.value())
+//                            .msg(bindingResult.getAllErrors().get(0).getDefaultMessage())
+//                            .build());
+//        }
         }
-        if (!password.matches("^[0-9|a-z|A-Z]*$")) {
-            return new ResponseEntity(NOT_CONGITION_PASSWORD.getHttpStatus());
-        }
-        // 회원 중복 확인
-        Optional<User> found = userRepository.findByUsername(username);
-        if (found.isPresent()) {
-            return new ResponseEntity(DUPLICATE_USER.getHttpStatus());
-        }
-
-        //사용자 ROLE 확인
-        UserRoleEnum role = UserRoleEnum.USER;
-        if (signupRequestDto.isAdmin()) {
-            if (!signupRequestDto.getAdminToken().equals(ADMIN_TOKEN)) {
-                return new ResponseEntity(INVALID_ADMIN_TOKEN.getHttpStatus());
+            // 회원 중복 확인
+            Optional<User> found = userRepository.findByUsername(username);
+            if (found.isPresent()) {
+                return new ResponseEntity(DUPLICATE_USER.getHttpStatus());
+//            return ResponseEntity.badRequest()  // status : bad request
+//                    .body(MessageDto.builder()  // body : SuccessResponseDto (statusCode, msg)
+//                            .statusCode(HttpStatus.BAD_REQUEST.value())
+//                            .msg("중복된 사용자가 존재합니다.")
+//                            .build());
+//        }
             }
-            role = UserRoleEnum.ADMIN;
-        }
-        // 새로운 user 객체를 다시 만들어준 후
-        User user = User.builder()
-                .username(username)
-                .password(password)
-                .role(role)
-                .build();
-        // DB에 저장하기
-        userRepository.save(user);
-        // ResponseEntity로 Return하기
-        return ResponseEntity.ok()
-                .body(MessageDto.builder()
-                        .statusCode(HttpStatus.OK.value())
-                        .msg("회원가입 성공")
-                        .build()
-                );
-    }
+                //사용자 ROLE 확인
+                UserRoleEnum role = UserRoleEnum.USER;
+                if (signupRequestDto.isAdmin()) {
+                    if (!signupRequestDto.getAdminToken().equals(ADMIN_TOKEN)) {
+                        return new ResponseEntity(INVALID_ADMIN_TOKEN.getHttpStatus());
+                    }
+                    role = UserRoleEnum.ADMIN;
+                }
+                // 새로운 user 객체를 다시 만들어준 후
+                User user = User.builder()
+                        .username(username)
+                        .password(password)
+                        .role(role)
+                        .build();
+                // DB에 저장하기
+                userRepository.save(user);
+                return ResponseEntity.ok(new MessageDto("로그인 성공"));
+                // ResponseEntity로 Return하기
+//        return ResponseEntity.ok()
+//                .body(MessageDto.builder()
+//                        .statusCode(HttpStatus.OK.value())
+//                        .msg("회원가입 성공")
+//                        .build()
+//                );
+            }
+
 
     // 로그인 기능
 //    @Transactional
@@ -178,12 +194,12 @@ public class UserService {
         }
 
         reponse.addHeader(JwtUtil.AUTHORIZATION_HEADER, jwtUtil.createToken(user.get().getUsername(), user.get().getRole()));
-
-        return ResponseEntity.ok()
-
-                .body(MessageDto.builder()
-                        .statusCode(HttpStatus.OK.value())
-                        .msg("로그인 성공")
-                        .build());
+        return ResponseEntity.ok(new MessageDto("로그인 성공"));
+//        return ResponseEntity.ok()
+//
+//                .body(MessageDto.builder()
+//                        .statusCode(HttpStatus.OK.value())
+//                        .msg("로그인 성공")
+//                        .build());
     }
 }

@@ -32,9 +32,9 @@ public class UserController {
 //    }
 
     @PostMapping("/signup")
-    public ResponseEntity<MessageDto> signup(@RequestBody @Valid SignupRequestDto signupRequestDto) {
+    public ResponseEntity<?> signup(@RequestBody @Valid SignupRequestDto signupRequestDto, BindingResult bindingResult) {
         //userService.signup(signupRequestDto);   //이메일이 왜 안들어갔는지 찾아보 여기서부터 값을 못받아온다아아아아 받아오게 만들자!!
-        return userService.signup(signupRequestDto);
+        return userService.signup(signupRequestDto, bindingResult);
     }
 
     @ResponseBody

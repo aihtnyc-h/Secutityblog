@@ -11,6 +11,7 @@ import com.example.replyblog.dto.AllResponseDto;
 import com.example.replyblog.jwt.JwtUtil;
 import com.example.replyblog.replay.dto.ReplyResponseDto;
 import com.example.replyblog.replay.entity.Reply;
+import com.example.replyblog.replay.repository.ReplyRepository;
 import com.example.replyblog.user.entity.User;
 import com.example.replyblog.user.entity.UserRoleEnum;
 import com.example.replyblog.user.repository.UserRepository;
@@ -38,6 +39,7 @@ public class BlogService {
     // 0) DI 넣어주기
     private final BlogRepository blogRepository;
     private final UserRepository userRepository;
+    private final ReplyRepository replyRepository;
     private final JwtUtil jwtUtil;
 
     // 1. 전체 게시글 목록 조회
@@ -45,7 +47,7 @@ public class BlogService {
     @Transactional(readOnly = true)
     public ResponseEntity<List<AllResponseDto>> getBlogs() {
         // 1) 객체선언하기!
-        List<Blog> blogList = blogRepository.findAllByOrderByCreatedAtAsc();
+        List<Blog> blogList = blogRepository.findAllByOrderByModifiedAtDesc();
         List<AllResponseDto> allResponseDtoList = new ArrayList<>();
         // 2) 각각의 게시글 마다 댓글들을 전부 가져오기
         for (Blog blog : blogList) {
@@ -134,19 +136,19 @@ public class BlogService {
                 return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
             }
 
-                // 3) 요청받은 DTO 로 DB에 저장할 객체 만들기
-                Blog blog = blogRepository.save(Blog.builder()
-                        .blogRequestDto(blogrequestDto)
-                        .user(user.get())
-                        .build());
+            // 3) 요청받은 DTO 로 DB에 저장할 객체 만들기
+            Blog blog = blogRepository.save(Blog.builder()
+                    .blogRequestDto(blogrequestDto)
+                    .user(user.get())
+                    .build());
 
-                // 4) ResponseEntity에 Body 부분에 만든 객체 전달.
-                return ResponseEntity.ok()
-                        .body(new BlogResponseDto(blog));
-            } else { // 토큰이 없는 경우.
+            // 4) ResponseEntity에 Body 부분에 만든 객체 전달.
+            return ResponseEntity.ok()
+                    .body(new BlogResponseDto(blog));
+        } else { // 토큰이 없는 경우.
             return new ResponseEntity(INVALID_TOKEN.getHttpStatus());
-            }
         }
+    }
 
 //    @Transactional
 //    public ResponseEntity<?> createBlog(Long id, BlogRequestDto blogrequestDto, HttpServletRequest request) {
@@ -263,7 +265,7 @@ public class BlogService {
 
     // 게시글 수정하기
     @Transactional
-    public ResponseEntity<?> updateBlog(Long id, BlogRequestDto blogrequestDto, HttpServletRequest request) {
+    public ResponseEntity<BlogResponseDto> updateBlog(Long id, BlogRequestDto blogrequestDto, HttpServletRequest request) {
         // 1) Request에서 Token 가져오기
         String token = jwtUtil.resolveToken(request);
         Claims claims;
@@ -283,44 +285,48 @@ public class BlogService {
 //            if (user.isEmpty()) {
 //                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
 //            }
-            User user = userRepository.findByUsername(claims.getSubject()).orElseThrow(
-                    () -> new CustomException(ErrorCode.NOT_FOUND_USER)
-            );
-            // 4) id와 user를 사용하여 DB조회
-//            Optional<Blog> blog = blogRepository.findByIdAndUserId(id, user.get());
-//            if (blog.isEmpty()) {
-//                return new ResponseEntity(AUTHORIZATION.getHttpStatus());
-//            }
-            Blog blog = blogRepository.findById(id).orElseThrow(
-                    () -> new CustomException(ErrorCode.AUTHORIZATION)
-            );
-            if (blog.getUser().getUsername().equals(user.getUsername()) || user.getRole() == UserRoleEnum.ADMIN) {
-            //blog.get().update(blogrequestDto, user.get());
+            Optional<User> user = userRepository.findByUsername(claims.getSubject());
+            if (user.isEmpty()) {
+                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
 
-//            List<ReplyResponseDto> commentList = new ArrayList<>();
-//            for (Reply reply : blog.get().getComments()) {
-//                commentList.add(new ReplyResponseDto(reply));
-//            }
-//            return ResponseEntity.ok()
-//                    .body(new BlogResponseDto(blog.get(), commentList));
-//        } else { // 토큰이 존재하지 않을 경우.
-//            return new ResponseEntity(INVALID_TOKEN.getHttpStatus());
-//        }
-                return ResponseEntity.ok(new BlogDto.Response(blog, blog.getUser().getUsername()));
-    }  else {
-            return ErrorResponse.toResponseEntity(new CustomException(NO_AUTHORITY).getErrorCode());
+            }
+            // 4) id와 user를 사용하여 DB조회
+            Optional<Blog> blog = blogRepository.findByIdAndUser(id, user.get());
+            if (blog.isEmpty()) {
+                return new ResponseEntity(AUTHORIZATION.getHttpStatus());
+            }
+//            Blog blog = blogRepository.findById(id).orElseThrow(
+//                    () -> new CustomException(ErrorCode.AUTHORIZATION)
+//            );
+//            if (blog.getUser().getUsername().equals(user.getUsername()) || user.getRole() == UserRoleEnum.ADMIN) {
+            blog.get().update(blogrequestDto, user.get());
+
+            List<ReplyResponseDto> commentList = new ArrayList<>();
+            for (Reply reply : blog.get().getComments()) {
+                commentList.add(new ReplyResponseDto(reply));
+            }
+            return ResponseEntity.ok()
+                    .body(new BlogResponseDto(blog.get(), commentList));
+        } else { // 토큰이 존재하지 않을 경우.
+            return new ResponseEntity(INVALID_TOKEN.getHttpStatus());
         }
-    } else {
-        return ErrorResponse.toResponseEntity(new CustomException(INVALID_TOKEN).getErrorCode());
+//                return ResponseEntity.ok(new BlogDto.Response(blog, blog.getUser().getUsername()));
+//            } else {
+//                return ErrorResponse.toResponseEntity(new CustomException(NO_AUTHORITY).getErrorCode());
+//            }
+//        } else {
+//            return ErrorResponse.toResponseEntity(new CustomException(INVALID_TOKEN).getErrorCode());
+//        }
     }
-}
+
+
 //            Optional<Blog> blog = blogRepository.findByIdAndUserId(id, user.get());
 //            }if (blog.isEmpty()) {
 //                throw new IllegalArgumentException("댓글이 존재하지 않습니다.");
 //            }
 //                    () -> new IllegalArgumentException("존재하지 않는 사용자입니다.")
 //            );
-            // 5) 블로그에 업데이트
+    // 5) 블로그에 업데이트
 //            blog.get().update(blogrequestDto, user.get());
 //            BlogResponseDto blogResponseDto = new BlogResponseDto(blog);
 //            // 6)   가져온 blog에 Reply를 commentList에 저장하기
@@ -346,7 +352,6 @@ public class BlogService {
 //            return ErrorResponse.toResponseEntity(new CustomException(ErrorCode.INVALID_TOKEN).getErrorCode());
 //        }
 //    }
-
 
 
     // List로 사용했을 때
@@ -383,10 +388,10 @@ public class BlogService {
 //     blogRepository.deleteById(id);
 //     return new BlogDto<BlogMessageDto>("success", new BlogMessageDto("게시글 삭제 성공"));
 // }
-    //게시글 삭제
+
     // 게시글 삭제
     @Transactional
-    public ResponseEntity<MessageDto> deleteBlog(Long id, HttpServletRequest request) {
+    public ResponseEntity<ErrorResponse> deleteBlog(Long id, HttpServletRequest request) {
         // 1) Request에서 Token 가져오기
         String token = jwtUtil.resolveToken(request);
         Claims claims;
@@ -398,20 +403,31 @@ public class BlogService {
                 // 토큰에서 사용자 정보 가져오기
                 claims = jwtUtil.getUserInfoFromToken(token);
             } else {
-                return new ResponseEntity(INVALID_TOKEN.getHttpStatus());            }
+                return new ResponseEntity(INVALID_TOKEN.getHttpStatus());
+            }
             // 3) 토큰에서 가져온 사용자 정보를 사용하여 DB 조회
             // 회원 토큰 확인
+//            User user = userRepository.findByUsername(claims.getSubject()).orElseThrow(
+//                    () -> new CustomException(ErrorCode.NOT_FOUND_USER)
+//            );
             Optional<User> user = userRepository.findByUsername(claims.getSubject());
             if (user.isEmpty()) {
                 return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
             }
+
             // 4) id와 user를 사용하여 DB조회
-            Optional<Blog> blog = blogRepository.findByIdAndUserId(id, user.get());
+
+//            Blog blog = blogRepository.findById(id).orElseThrow(
+//                    () -> new CustomException(ErrorCode.AUTHORIZATION)
+//            );
+//            if (blog.getUser().getUsername().equals(user.getUsername()) || user.getRole() == UserRoleEnum.ADMIN) {
+
+            Optional<Blog> blog = blogRepository.findByIdAndUser(id, user.get());
             if (blog.isEmpty()) {
                 return new ResponseEntity(AUTHORIZATION.getHttpStatus());
             }
-
             // 5) id를 통해서 DB 삭제.
+            //replyRepository.deleteById(id);
             blogRepository.deleteById(id);
 //            JSONObject success = new JSONObject();
 //            success.put("success", true);
@@ -420,13 +436,29 @@ public class BlogService {
             // 6) ResponseEntity에 Body 부분에 만든 객체 전달.
 //            return new BlogDto<MessageDto>("success", new MessageDto("게시글 삭제 성공"));
 
-            return ResponseEntity.ok().body(MessageDto.builder()
-                            .statusCode(HttpStatus.OK.value())
+//            return ResponseEntity.ok().body(MessageDto.builder()
+//                            .statusCode(HttpStatus.OK.value())
+//                            .msg("게시글 삭제 성공.")
+//                            .build()
+//                    );
+//        } else {
+//            return null;
+//        }
+//    }
+//                return ResponseEntity.ok(new MessageDto("삭제 성공"));
+//            } else {
+//                return ErrorResponse.toResponseEntity(new CustomException(NO_AUTHORITY).getErrorCode());
+//            }
+//        } else {
+//            return ErrorResponse.toResponseEntity(new CustomException(INVALID_TOKEN).getErrorCode());
+//        }
+            return ResponseEntity.ok()
+                    .body(ErrorResponse.builder()
+                            .statuscode(HttpStatus.OK.value())
                             .msg("게시글 삭제 성공.")
-                            .build()
-                    );
+                            .build());
         } else {
-            return null;
+            return new ResponseEntity(NOT_FOUND_TOKEN.getHttpStatus());
         }
     }
 }
