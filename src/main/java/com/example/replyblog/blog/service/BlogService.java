@@ -132,9 +132,11 @@ public class BlogService {
 
             // 2-2) 토큰에서 가져온 사용자 정보를 사용하여 DB 조회 및 유무판단.
             Optional<User> user = userRepository.findByUsername(claims.getSubject());
-            if (user.isEmpty()) {
-                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
-            }
+//            if (user.isEmpty()) {
+//                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
+//            }
+            user.isEmpty();
+            new ResponseEntity(NOT_FOUND_USER.getHttpStatus()); // Optional은 if가 대체가 가능하기 때문에 if를 안쓰고 만드는 것이 좋다!
 
             // 3) 요청받은 DTO 로 DB에 저장할 객체 만들기
             Blog blog = blogRepository.save(Blog.builder()
@@ -286,15 +288,21 @@ public class BlogService {
 //                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
 //            }
             Optional<User> user = userRepository.findByUsername(claims.getSubject());
-            if (user.isEmpty()) {
-                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
+//            if (user.isEmpty()) {
+//                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
+//
+//            }
+            user.isEmpty();
+            new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
 
-            }
             // 4) id와 user를 사용하여 DB조회
             Optional<Blog> blog = blogRepository.findByIdAndUser(id, user.get());
-            if (blog.isEmpty()) {
-                return new ResponseEntity(AUTHORIZATION.getHttpStatus());
-            }
+//            if (blog.isEmpty()) {
+//                return new ResponseEntity(AUTHORIZATION.getHttpStatus());
+//            }
+            blog.isEmpty();
+            new ResponseEntity(AUTHORIZATION.getHttpStatus());
+
 //            Blog blog = blogRepository.findById(id).orElseThrow(
 //                    () -> new CustomException(ErrorCode.AUTHORIZATION)
 //            );
@@ -411,10 +419,11 @@ public class BlogService {
 //                    () -> new CustomException(ErrorCode.NOT_FOUND_USER)
 //            );
             Optional<User> user = userRepository.findByUsername(claims.getSubject());
-            if (user.isEmpty()) {
-                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
-            }
-
+//            if (user.isEmpty()) {
+//                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
+//            }
+            user.isEmpty();
+            new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
             // 4) id와 user를 사용하여 DB조회
 
 //            Blog blog = blogRepository.findById(id).orElseThrow(
@@ -423,11 +432,16 @@ public class BlogService {
 //            if (blog.getUser().getUsername().equals(user.getUsername()) || user.getRole() == UserRoleEnum.ADMIN) {
 
             Optional<Blog> blog = blogRepository.findByIdAndUser(id, user.get());
-            if (blog.isEmpty()) {
-                return new ResponseEntity(AUTHORIZATION.getHttpStatus());
-            }
+            //if문으로 썼을 때
+//            if (blog.isEmpty()) {
+//                return new ResponseEntity(AUTHORIZATION.getHttpStatus());
+//            }
+            // if 문으로 안 썼을 때
+            blog.isEmpty();
+            new ResponseEntity(AUTHORIZATION.getHttpStatus());
+
+
             // 5) id를 통해서 DB 삭제.
-            //replyRepository.deleteById(id);
             blogRepository.deleteById(id);
 //            JSONObject success = new JSONObject();
 //            success.put("success", true);

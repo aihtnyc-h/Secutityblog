@@ -52,13 +52,16 @@ public class ReplyService {
             if (blog.isEmpty()) {
                 return new ResponseEntity(NOT_FOUND_BLOG.getHttpStatus());
             }
-
+            blog.isEmpty();
+            new ResponseEntity(NOT_FOUND_BLOG.getHttpStatus());
             // 4) 토큰에서 가져온 사용자 정보를 사용하여 DB 조회 -> user 엔티티 get
             Optional<User> user = userRepository.findByUsername(claims.getSubject());
-            if (user.isEmpty()) {
-                //return new ResponseEntity<ReplyResponseDto>(NOT_FOUND_USER.getHttpStatus());
-                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
-            }
+//            if (user.isEmpty()) {
+//                //return new ResponseEntity<ReplyResponseDto>(NOT_FOUND_USER.getHttpStatus());
+//                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
+//            }
+            user.isEmpty();
+            new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
             // 5) 요청받은 DTO 로 DB에 저장할 객체 만들기
             Reply reply = replyRepository.save(Reply.builder()
                     .replyrequestDto(replyRequestDto)
@@ -92,25 +95,29 @@ public class ReplyService {
             }
 
             Optional<User> user = userRepository.findByUsername(claims.getSubject());
-            if (user.isEmpty()) {
-                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
-
-            }
+//            if (user.isEmpty()) {
+//                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
+//            }
+            user.isEmpty();
+            new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
             // 3) Admin 권한이 있는 친구는 전부 수정, 아닌경우 일부수정.
             UserRoleEnum userRoleEnum = user.get().getRole();
             Optional<Reply> reply;
             // 3-1) Admin 권환인 경우.
             if (userRoleEnum == UserRoleEnum.ADMIN) {
                 reply = replyRepository.findById(id);
-                if (reply.isEmpty()) { // 일치하는 댓글이 없다면
-                    return new ResponseEntity(NOT_FOUND_COMMENT.getHttpStatus());
-                }
-
+//                if (reply.isEmpty()) { // 일치하는 댓글이 없다면
+//                    return new ResponseEntity(NOT_FOUND_COMMENT.getHttpStatus());
+//                }
+                reply.isEmpty();
+                new ResponseEntity(NOT_FOUND_COMMENT.getHttpStatus());
             } else { // 3-2) User 권한인 경우.
                 reply = replyRepository.findByIdAndUser(id, user.get());
-                if (reply.isEmpty()) { // 일치하는 댓글이 없다면
-                    return new ResponseEntity(NOT_FOUND_COMMENT.getHttpStatus());
-                }
+//                if (reply.isEmpty()) { // 일치하는 댓글이 없다면
+//                    return new ResponseEntity(NOT_FOUND_COMMENT.getHttpStatus());
+//                }
+                reply.isEmpty();
+                new ResponseEntity(NOT_FOUND_COMMENT.getHttpStatus());
             }
             // 4) Comment Update
             reply.get().update(replyRequestDto, user.get());
@@ -143,9 +150,11 @@ public class ReplyService {
 
             //  2-2) 토큰에서 가져온 사용자 정보를 사용하여 DB 조회 및 유무 판단.
             Optional<User> user = userRepository.findByUsername(claims.getSubject());
-            if (user.isEmpty()) {
-                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
-            }
+//            if (user.isEmpty()) {
+//                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
+//            }
+            user.isEmpty();
+            new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
             // 3) Admin 권한이 있는 친구는 전부 수정, 아닌경우 일부수정.
             UserRoleEnum userRoleEnum = user.get().getRole();
             Optional<Reply> reply;
@@ -153,15 +162,18 @@ public class ReplyService {
             // Admin 권환인 경우.
             if (userRoleEnum == UserRoleEnum.ADMIN) {
                 reply = replyRepository.findById(id);
-                if (reply.isEmpty()) { // 일치하는 댓글이 없다면
-                    return new ResponseEntity(NOT_FOUND_COMMENT.getHttpStatus());
-                }
-
+//                if (reply.isEmpty()) { // 일치하는 댓글이 없다면
+//                    return new ResponseEntity(NOT_FOUND_COMMENT.getHttpStatus());
+//                }
+                reply.isEmpty();
+                new ResponseEntity(NOT_FOUND_COMMENT.getHttpStatus());
             } else {    // User 권한인 경우.
                 reply = replyRepository.findByIdAndUser(id, user.get());
-                if (reply.isEmpty()) { // 일치하는 댓글이 없다면
-                    return new ResponseEntity(NOT_FOUND_COMMENT.getHttpStatus());
-                }
+//                if (reply.isEmpty()) { // 일치하는 댓글이 없다면
+//                    return new ResponseEntity(NOT_FOUND_COMMENT.getHttpStatus());
+//                }
+                reply.isEmpty();
+                new ResponseEntity(NOT_FOUND_COMMENT.getHttpStatus());
             }
 
             // 4) Comment Delete

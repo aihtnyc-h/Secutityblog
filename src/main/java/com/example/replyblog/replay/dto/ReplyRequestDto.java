@@ -9,8 +9,5 @@ public class ReplyRequestDto {
     public ReplyRequestDto(String comments) {
         this.comments = comments;
     }
-
     private String comments;
-
-
 }
