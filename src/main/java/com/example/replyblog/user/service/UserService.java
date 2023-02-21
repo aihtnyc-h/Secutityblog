@@ -83,7 +83,7 @@ public class UserService {
                         .build();
                 // DB에 저장하기
                 userRepository.save(user);
-                return ResponseEntity.ok(new MessageDto("로그인 성공"));
+                return ResponseEntity.ok(new MessageDto("회원가입 성공"));
                 // ResponseEntity로 Return하기
 //        return ResponseEntity.ok()
 //                .body(MessageDto.builder()
