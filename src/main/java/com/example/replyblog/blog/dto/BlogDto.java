@@ -17,4 +17,9 @@ public class BlogDto<T> {
         public blogrequestDto(Blog blog, String username) {
         }
     }
+
+    public static class Response {
+        public Response(Blog blog, String username) {
+        }
+    }
 }

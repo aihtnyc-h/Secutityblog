@@ -42,10 +42,10 @@ public class Blog extends Timestamped {
         this.user = user;
 
     }
-    public void update(BlogRequestDto blogRequestDto, User user) {
+    public void update(BlogRequestDto blogRequestDto) {
         this.contents = blogRequestDto.getContents();
         this.title = blogRequestDto.getTitle();
-        this.user = user;
+        //this.user = user;
     }
 
 }

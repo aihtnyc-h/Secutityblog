@@ -33,6 +33,7 @@ public class BlogController {
     }
 //    public ResponseEntity<BlogResponseDto>getBlogs() {
 //        return blogService.getBlogs(); }
+
     //게시글 1개 조회하기 서버
     @GetMapping("/api/blog/{id}")
     public ResponseEntity<BlogResponseDto> getBlog(@PathVariable Long id) {

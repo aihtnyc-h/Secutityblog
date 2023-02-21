@@ -279,27 +279,41 @@ public class BlogService {
             }
             // 3) 토큰에서 가져온 사용자 정보를 사용하여 DB 조회
             // 회원 토큰 확인
-            Optional<User> user = userRepository.findByUsername(claims.getSubject());
-            if (user.isEmpty()) {
-                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
-            }
+//            Optional<User> user = userRepository.findByUsername(claims.getSubject());
+//            if (user.isEmpty()) {
+//                return new ResponseEntity(NOT_FOUND_USER.getHttpStatus());
+//            }
+            User user = userRepository.findByUsername(claims.getSubject()).orElseThrow(
+                    () -> new CustomException(ErrorCode.NOT_FOUND_USER)
+            );
             // 4) id와 user를 사용하여 DB조회
-            Optional<Blog> blog = blogRepository.findByIdAndUserId(id, user.get());
-            if (blog.isEmpty()) {
-                return new ResponseEntity(AUTHORIZATION.getHttpStatus());
-            }
-            //if (blog.getUser().getUsername().equals(user.getUsername()) || user.getRole() == UserRoleEnum.ADMIN) {
-            blog.get().update(blogrequestDto, user.get());
-            List<ReplyResponseDto> commentList = new ArrayList<>();
-            for (Reply reply : blog.get().getComments()) {
-                commentList.add(new ReplyResponseDto(reply));
-            }
-            return ResponseEntity.ok()
-                    .body(new BlogResponseDto(blog.get(), commentList));
-        } else { // 토큰이 존재하지 않을 경우.
-            return new ResponseEntity(INVALID_TOKEN.getHttpStatus());
+//            Optional<Blog> blog = blogRepository.findByIdAndUserId(id, user.get());
+//            if (blog.isEmpty()) {
+//                return new ResponseEntity(AUTHORIZATION.getHttpStatus());
+//            }
+            Blog blog = blogRepository.findById(id).orElseThrow(
+                    () -> new CustomException(ErrorCode.AUTHORIZATION)
+            );
+            if (blog.getUser().getUsername().equals(user.getUsername()) || user.getRole() == UserRoleEnum.ADMIN) {
+            //blog.get().update(blogrequestDto, user.get());
+
+//            List<ReplyResponseDto> commentList = new ArrayList<>();
+//            for (Reply reply : blog.get().getComments()) {
+//                commentList.add(new ReplyResponseDto(reply));
+//            }
+//            return ResponseEntity.ok()
+//                    .body(new BlogResponseDto(blog.get(), commentList));
+//        } else { // 토큰이 존재하지 않을 경우.
+//            return new ResponseEntity(INVALID_TOKEN.getHttpStatus());
+//        }
+                return ResponseEntity.ok(new BlogDto.Response(blog, blog.getUser().getUsername()));
+    }  else {
+            return ErrorResponse.toResponseEntity(new CustomException(NO_AUTHORITY).getErrorCode());
         }
+    } else {
+        return ErrorResponse.toResponseEntity(new CustomException(INVALID_TOKEN).getErrorCode());
     }
+}
 //            Optional<Blog> blog = blogRepository.findByIdAndUserId(id, user.get());
 //            }if (blog.isEmpty()) {
 //                throw new IllegalArgumentException("댓글이 존재하지 않습니다.");
