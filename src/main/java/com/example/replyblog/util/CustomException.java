@@ -1,6 +1,5 @@
 package com.example.replyblog.util;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
