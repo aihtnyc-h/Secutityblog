@@ -11,6 +11,7 @@ import com.example.replyblog.util.CustomException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindingResult;
@@ -24,10 +25,11 @@ import static com.example.replyblog.util.ErrorCode.*;
 @RequiredArgsConstructor
 public class UserService {
 
-    private static final String ADMIN_TOKEN = "AAABnvxRVklrnYxKZ0aHgTBcXukeZygoC";
+    private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final JwtUtil jwtUtil;
-
+    // ADMIN_TOKEN
+    private static final String ADMIN_TOKEN = "AAABnvxRVklrnYxKZ0aHgTBcXukeZygoC";
     @Transactional
     public ResponseEntity<?> signup(SignupRequestDto signupRequestDto, BindingResult bindingResult) {
         // username 규칙!

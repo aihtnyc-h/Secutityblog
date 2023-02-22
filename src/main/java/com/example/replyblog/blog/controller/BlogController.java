@@ -5,9 +5,13 @@ import com.example.replyblog.blog.dto.BlogRequestDto;
 import com.example.replyblog.blog.dto.BlogResponseDto;
 import com.example.replyblog.blog.service.BlogService;
 import com.example.replyblog.dto.AllResponseDto;
+import com.example.replyblog.jwt.UserDetailsImpl;
+import com.example.replyblog.user.entity.UserRoleEnum;
 import com.example.replyblog.util.ErrorResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.annotation.Secured;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.ModelAndView;
 
@@ -46,9 +50,10 @@ public class BlogController {
 //    }
 
     // 게시글 생성하기 서버
+    @Secured(UserRoleEnum.Authority.ADMIN)
     @PostMapping("/api/blog")
-    public  ResponseEntity<BlogResponseDto> createBlog(@RequestBody BlogRequestDto blogRequestDto, HttpServletRequest request) {
-        return blogService.createBlog(blogRequestDto, request);
+    public ResponseEntity<BlogResponseDto> createBlog(@RequestBody BlogRequestDto blogRequestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return blogService.createBlog(blogRequestDto, userDetails.getUser());
     }
     //    public List<BlogResponseDto> createBlog(@RequestBody BlogRequestDto requestDto, HttpServletRequest request) {
 //        return blogService.createBlog(requestDto, request);        //변수명사용하기 + 필드명 requestDto.getContents() -> 유저네임이 제목아름으로 들어갈 수 있기 때문에 대부분 통으로 보내준다.  // 카멜 케이스 단어랑 단어를 이어줄때, 뒤에오는 글자는 대문자       //왜 빨간줄이 뜨는거니..?
@@ -80,7 +85,7 @@ public class BlogController {
 
     //게시글 삭제하기 서버
     @DeleteMapping("/api/blog/{id}")
-    public ResponseEntity<ErrorResponse> deleteBlog(@PathVariable long id, HttpServletRequest request){
+    public ResponseEntity<ErrorResponse> deleteBlog(@PathVariable long id, HttpServletRequest request) {
         return blogService.deleteBlog(id, request);
     }
 //    @DeleteMapping("/api/blog/{id}")
@@ -97,4 +102,12 @@ public class BlogController {
 //        return blogService.deleteBlog(id, requestDto.getPassword());
 //    }
     // 커밋 푸쉬 연습하자
+
+    // 선택한 게시글 좋아요
+//    @PostMapping("/blog/like/{id}")
+//    public ResponseEntity<AllResponseDto> createBlogLike(
+//            @PathVariable Long id,
+//            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+//        return blogService.createBlogLike(id, userDetails.getUser());
+//    }
 }
