@@ -4,6 +4,7 @@ import com.example.replyblog.blog.entity.Blog;
 import com.example.replyblog.replay.dto.ReplyDto;
 import com.example.replyblog.replay.dto.ReplyRequestDto;
 import com.example.replyblog.replay.dto.ReplyResponseDto;
+import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
@@ -16,28 +17,38 @@ import java.util.List;
 public class BlogResponseDto {
     private Long id;
     private String title;
-    private String userName;
     private String contents;
+    private String username;
     private LocalDateTime createdAt;
-    private LocalDateTime modifiedat;
+    private LocalDateTime modifiedAt;
+    private  Long blogLikeCount;
     private List<ReplyResponseDto> commentList = new ArrayList<>();
 
-
-    public BlogResponseDto(Blog blog) {
+    private BlogResponseDto(Blog blog, List<ReplyResponseDto> commentList, Long blogLikeCount) {
         this.id = blog.getId();
         this.title = blog.getTitle();
         this.contents = blog.getContents();
-        this.userName = blog.getUser().getUsername();
+        this.username = blog.getUser().getUsername();
         this.createdAt = blog.getCreatedAt();
-        this.modifiedat = blog.getModifiedAt();
-    }
-    public BlogResponseDto(Blog blog, List<ReplyResponseDto> commentList) {
-        this.id = blog.getId();
-        this.title = blog.getTitle();
-        this.contents = blog.getContents();
-        this.userName = blog.getUser().getUsername();
-        this.createdAt = blog.getCreatedAt();
-        this.modifiedat = blog.getModifiedAt();
+        this.modifiedAt = blog.getModifiedAt();
+        this.blogLikeCount = blogLikeCount;
         this.commentList = commentList;
+    }
+    @Builder
+    public static BlogResponseDto from(Blog blog, List<ReplyResponseDto> commentList, Long blogLikeCount) {
+        return BlogResponseDto.builder()
+                .blog(blog)
+                .commentList(commentList)
+                .blogLikeCount(blogLikeCount)
+                .build();
+    }
+
+    public static BlogResponseDto from(Blog blog)
+    {
+        return BlogResponseDto.builder()
+                .blog(blog)
+                .blogLikeCount(0L)
+                .commentList(new ArrayList<>())
+                .build();
     }
 }

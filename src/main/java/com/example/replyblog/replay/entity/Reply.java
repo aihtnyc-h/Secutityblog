@@ -30,8 +30,8 @@ public class Reply extends Timestamped {
     private String comments;     //댓글 내용
 
     @Builder
-    public Reply(ReplyRequestDto replyrequestDto, Blog blog, User user) {
-        this.blog = blog;
+    public Reply(ReplyRequestDto replyrequestDto, User user, Blog blog) {
+        this.blog = this.blog;
         this.user = user;
         this.comments= replyrequestDto.getComments();
     }

@@ -12,5 +12,5 @@ public interface BlogRepository extends JpaRepository<Blog, Long> {
     List<Blog> findAllByOrderByModifiedAtDesc();
     Optional<Blog> findByIdAndUser(Long id, User user);
 
-    Blog findByIdAndUserId(Long id, Long id1);
+    Optional<Blog> findByIdAndUserId(Long id, Long id1);
 }
