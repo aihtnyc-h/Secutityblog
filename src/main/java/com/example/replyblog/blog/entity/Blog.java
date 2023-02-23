@@ -48,4 +48,5 @@ public class Blog extends Timestamped {
         this.user = user;
     }
 
+
 }

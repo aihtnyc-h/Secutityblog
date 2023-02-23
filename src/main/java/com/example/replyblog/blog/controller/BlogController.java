@@ -1,19 +1,14 @@
 package com.example.replyblog.blog.controller;
 
-import com.example.replyblog.blog.dto.MessageDto;
 import com.example.replyblog.blog.dto.BlogRequestDto;
 import com.example.replyblog.blog.dto.BlogResponseDto;
 import com.example.replyblog.blog.service.BlogService;
 import com.example.replyblog.dto.AllResponseDto;
 import com.example.replyblog.jwt.UserDetailsImpl;
-import com.example.replyblog.user.entity.UserRoleEnum;
-import com.example.replyblog.util.ErrorResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.servlet.ModelAndView;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -33,7 +28,7 @@ public class BlogController {
 
     // 전체조회
     @GetMapping("/api/blogs")
-    public ResponseEntity<List<AllResponseDto>> getBlogs() {
+    public ResponseEntity<List<BlogResponseDto>> getBlogs() {
         return blogService.getBlogs();
     }
 //    public ResponseEntity<BlogResponseDto>getBlogs() {
@@ -50,7 +45,6 @@ public class BlogController {
 //    }
 
     // 게시글 생성하기 서버
-    @Secured(UserRoleEnum.Authority.ADMIN)
     @PostMapping("/api/blog")
     public ResponseEntity<BlogResponseDto> createBlog(@RequestBody BlogRequestDto blogRequestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
         return blogService.createBlog(blogRequestDto, userDetails.getUser());
@@ -70,8 +64,8 @@ public class BlogController {
 
     //게시글 변경하기 서버
     @PutMapping("/api/blog/{id}")
-    public ResponseEntity<BlogResponseDto> updateBlog(@PathVariable Long id, @RequestBody BlogRequestDto blogRequestDto, HttpServletRequest request) {
-        return blogService.updateBlog(id, blogRequestDto, request);
+    public ResponseEntity<BlogResponseDto> updateBlog(@PathVariable Long id, @RequestBody BlogRequestDto blogRequestDto, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return blogService.updateBlog(id, blogRequestDto, userDetails.getUser());
     }
 //    public List<BlogResponseDto> updateBlog(@RequestBody BlogRequestDto requestDto, HttpServletRequest request) {
 //        return blogService.updateBlog(requestDto, request);
@@ -85,10 +79,11 @@ public class BlogController {
 
     //게시글 삭제하기 서버
     @DeleteMapping("/api/blog/{id}")
-    public ResponseEntity<ErrorResponse> deleteBlog(@PathVariable long id, HttpServletRequest request) {
-        return blogService.deleteBlog(id, request);
+    public ResponseEntity<AllResponseDto> deleteBlog(@PathVariable long id, @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return blogService.deleteBlog(id, userDetails.getUser());
     }
-//    @DeleteMapping("/api/blog/{id}")
+
+    //    @DeleteMapping("/api/blog/{id}")
 //    public BlogDto<?> deleteBlog(@PathVariable Long id, @RequestBody BlogRequestDto requestDto) {
 //        return blogService.deleteBlog(id, requestDto.getPassword());
 //    }
@@ -110,4 +105,13 @@ public class BlogController {
 //            @AuthenticationPrincipal UserDetailsImpl userDetails) {
 //        return blogService.createBlogLike(id, userDetails.getUser());
 //    }
+
+
+    // 게시글 좋아요
+    @PostMapping("/blogs/like/{id}")
+    public ResponseEntity<AllResponseDto> createBlogLike(
+            @PathVariable Long id,
+            @AuthenticationPrincipal UserDetailsImpl userDetails) {
+        return blogService.createBlogLike(id, userDetails.getUser());
+    }
 }
